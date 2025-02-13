@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"github.com/alecthomas/jsonschema" // Додано правильний імпорт
+	"github.com/alecthomas/jsonschema"
 
 	"github.com/cilium/cilium/api/v1/observer"
 	"github.com/falcosecurity/plugin-sdk-go/pkg/sdk"
@@ -86,9 +86,12 @@ func (p *Plugin) Init(config string) error {
 // Fields повертає список полів, які можна витягувати з подій Hubble
 func (p *Plugin) Fields() []sdk.FieldEntry {
 	return []sdk.FieldEntry{
-		{Type: "string", Name: "hubble.type", Desc: "Type of the event"},
-		{Type: "string", Name: "hubble.source", Desc: "Source of the event"},
-		{Type: "string", Name: "hubble.destination", Desc: "Destination of the event"},
+		{Type: "string", Name: "hubble.event_type", Desc: "Type of the event"},
+		{Type: "string", Name: "hubble.source_ip", Desc: "Source ip"},
+		{Type: "string", Name: "hubble.destination_ip", Desc: "Destination ip"},
+		{Type: "string", Name: "hubble.traffic_direction", Desc: "traffic_direction"},
+		{Type: "string", Name: "hubble.flow_type", Desc: "flow type"},
+		{Type: "string", Name: "hubble.pod_name", Desc: "pod name"},
 		{Type: "string", Name: "hubble.verdict", Desc: "Verdict of the event"},
 		{Type: "string", Name: "hubble.summary", Desc: "Summary of the event"},
 	}
@@ -102,11 +105,17 @@ func (p *Plugin) Extract(req sdk.ExtractRequest, evt sdk.EventReader) error {
 	}
 
 	switch req.Field() {
-	case "hubble.type":
+	case "hubble.event_type":
 		req.SetValue(flow.GetFlow().GetEventType().String())
-	case "hubble.source":
-		req.SetValue(flow.GetFlow().GetSource().GetPodName())
-	case "hubble.destination":
+	case "hubble.source_ip":
+		req.SetValue(flow.GetFlow().GetIP().GetSource())
+	case "hubble.destination_ip":
+		req.SetValue(flow.GetFlow().GetIP().GetDestination())
+	case "hubble.traffic_direction":
+		req.SetValue(flow.GetFlow().GetTrafficDirection().String())
+	case "hubble.flow_type":
+		req.SetValue(flow.GetFlow().GetType().String())
+	case "hubble.pod_name":
 		req.SetValue(flow.GetFlow().GetDestination().GetPodName())
 	case "hubble.verdict":
 		req.SetValue(flow.GetFlow().GetVerdict().String())

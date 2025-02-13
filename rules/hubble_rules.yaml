@@ -1,0 +1,17 @@
+- rule: Hubble External Connection
+  desc: Detect connections to external IP addresses.
+  condition: >
+    hubble.event_type != ""
+  output: >
+    External connection detected!
+    Event_type=%hubble.event_type, 
+    Source_IP=%hubble.source_ip, 
+    Destination_IP=%hubble.destination_ip,
+    Traffic_Direction=%hubble.traffic_direction,
+    Flow_Type=%hubble.flow_type,
+    Pod_Name=%hubble.pod_name,
+    Verdict=%hubble.verdict, 
+    Summary=%hubble.summary
+  priority: NOTICE
+  source: hubble
+  tags: [network, hubble, kubernetes]
