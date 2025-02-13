@@ -4,7 +4,7 @@ import (
 	"github.com/falcosecurity/plugin-sdk-go/pkg/sdk/plugins"
 	"github.com/falcosecurity/plugin-sdk-go/pkg/sdk/plugins/extractor"
 	"github.com/falcosecurity/plugin-sdk-go/pkg/sdk/plugins/source"
-	"github.com/your-username/your-repo/pkg/hubble" // Імпортуємо пакет з pkg
+    "hubble-plugin/pkg"
 )
 
 const (

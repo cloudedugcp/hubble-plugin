@@ -6,12 +6,22 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"github.com/alecthomas/jsonschema" // Додано правильний імпорт
 
 	"github.com/cilium/cilium/api/v1/observer"
 	"github.com/falcosecurity/plugin-sdk-go/pkg/sdk"
 	"github.com/falcosecurity/plugin-sdk-go/pkg/sdk/plugins"
 	"github.com/falcosecurity/plugin-sdk-go/pkg/sdk/plugins/source"
 	"google.golang.org/grpc"
+)
+
+var (
+	ID          uint32
+	Name        string
+	Description string
+	Contact     string
+	Version     string
+	EventSource string
 )
 
 // PluginConfig містить конфігурацію плагіну
@@ -32,32 +42,30 @@ func (p *PluginConfig) setDefault() {
 
 // SetInfo встановлює інформацію про плагін
 func (p *Plugin) SetInfo(id uint32, name, description, contact, version, eventSource string) {
-	// Можна зберегти ці значення в структурі, якщо потрібно
+	ID = id
+	Name = name
+	Contact = contact
+	Version = version
+	EventSource = eventSource
 }
 
 // Info повертає інформацію про плагін
 func (p *Plugin) Info() *plugins.Info {
 	return &plugins.Info{
-		ID:          6,
-		Name:        "hubble",
-		Description: "Hubble Events",
-		Contact:     "github.com/falcosecurity/plugins/",
-		Version:     "0.1.0",
-		EventSource: "hubble",
+		ID:          ID,
+		Name:        Name,
+		Description: Description,
+		Contact:     Contact,
+		Version:     Version,
+		EventSource: EventSource,
 	}
-}
-
-// Init ініціалізує плагін з конфігурацією
-func (p *Plugin) Init(config string) error {
-	p.Config.setDefault()
-	return json.Unmarshal([]byte(config), &p.Config)
 }
 
 // InitSchema повертає JSON-схему для конфігурації плагіну
 func (p *Plugin) InitSchema() *sdk.SchemaInfo {
 	reflector := jsonschema.Reflector{
-		RequiredFromJSONSchemaTags: true,
-		AllowAdditionalProperties:  true,
+		RequiredFromJSONSchemaTags: true, // all properties are optional by default
+		AllowAdditionalProperties:  true, // unrecognized properties don't cause a parsing failures
 	}
 	if schema, err := reflector.Reflect(&PluginConfig{}).MarshalJSON(); err == nil {
 		return &sdk.SchemaInfo{
@@ -66,6 +74,14 @@ func (p *Plugin) InitSchema() *sdk.SchemaInfo {
 	}
 	return nil
 }
+
+// Init ініціалізує плагін з конфігурацією
+func (p *Plugin) Init(config string) error {
+	p.Config.setDefault()
+	return json.Unmarshal([]byte(config), &p.Config)
+}
+
+
 
 // Fields повертає список полів, які можна витягувати з подій Hubble
 func (p *Plugin) Fields() []sdk.FieldEntry {
@@ -135,7 +151,12 @@ func (p *Plugin) Open(params string) (source.Instance, error) {
 		}
 	}()
 
-	return source.NewPushInstance(eventC), nil
+	instance, err := source.NewPushInstance(eventC)
+	if err != nil {
+		return nil, err
+	}
+
+	return instance, nil
 }
 
 // String перетворює подію у рядок (необов'язково)
